@@ -1,0 +1,2 @@
+# Notes
+Note taking script
