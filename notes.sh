@@ -6,6 +6,8 @@ DATE=`date +%Y-%m-%d`
 EDIT=1
 LIST_DIRS=0
 ALL=0
+MERGE=0
+MERGE_DIR_PRE=.merge_
 
 
 if [ "$1" == "help" ]; then
@@ -16,11 +18,12 @@ if [ "$1" == "help" ]; then
     echo        "Print all Daily notes:                     'notes p a'"
     echo        "Edit yesterday's notes:                    'notes 1 e'"
     echo        "Print yesterday's notes:                   'notes 1'"
-    echo        "Edit today's <meeting name> notes:         'notes <meeting name>"
-    echo        "Print today's <meeting name> notes:        'notes <meeting name> p"
-    echo        "Print all <meeting name> notes:            'notes <meeting name> p a"
-    echo        "Print yesterday's <meeting name> notes:    'notes <meeting name> 1"
+    echo        "Edit today's <meeting name> notes:         'notes <meeting name>'"
+    echo        "Print today's <meeting name> notes:        'notes <meeting name> p'"
+    echo        "Print all <meeting name> notes:            'notes <meeting name> p a'"
+    echo        "Print yesterday's <meeting name> notes:    'notes <meeting name> 1'"
     echo        "List all notes:                            'notes ls'"
+    echo        "Merge daily notes into single file:        'notes <meeting name> m'"
     exit
 fi
 
@@ -55,13 +58,17 @@ else # input is alpha
         fi
     else
         PREFIX=$1
-        if [ $# == 2 ]; then
+        if [ $# == 2 ]; then # second argument exists
             if [ $2 > 0 ]; then
                 DATE=`date -d "$DATE - $2 day" +%Y-%m-%d` # prints current date - x days
                 echo $DATE
                 echo $PREFIX
+                EDIT=0
             fi # numeric
-            EDIT=0
+            if [ $2 == "m" ]; then # merge all with prefix
+                MERGE=1
+                EDIT=0
+            fi # merge
         else
             EDIT=1
             if [ $# == 3 ]; then
@@ -75,7 +82,6 @@ else # input is alpha
         fi # more than 1 arg
     fi
 
-#    echo prefix: $PREFIX
     FILE=$DIR$PREFIX-$DATE
     echo $FILE
             
@@ -85,6 +91,14 @@ else # input is alpha
     fi
 
 fi # check on numeric/alpha argument 
+
+
+# check for existince of backup / merge dir
+# if exists, then remove date from filename, then proceed.
+if [ -d "$DIR$MERGE_DIR_PRE$PREFIX" ]; then
+    FILE=$DIR$PREFIX
+fi
+
 
 if [ $EDIT == 1 ]; then
     if [ ! -f $FILE ]; then
@@ -106,5 +120,14 @@ else
     else
         ls -1 $DIR
     fi
+fi
+
+if [ $MERGE == 1 ]; then
+    # merge all files with PREFIX
+    TMP_PRE=DO_NOT_MOVE_
+    cat $DIR$PREFIX* > $DIR$TMP_PRE$PREFIX
+    mkdir $DIR$MERGE_DIR_PRE$PREFIX
+    mv $DIR$PREFIX* $DIR$MERGE_DIR_PRE$PREFIX
+    mv $DIR$TMP_PRE$PREFIX $DIR$PREFIX
 fi
 
