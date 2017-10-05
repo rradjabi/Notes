@@ -1,4 +1,5 @@
 #!/bin/sh
+# Notes version 0.5
 DIR=~/Notes/
 PREFIX=$1
 DATE=`date +%Y-%m-%d`
@@ -8,6 +9,7 @@ LIST_DIRS=0
 ALL=0
 MERGE=0
 MERGE_DIR_PRE=.merge_
+COOKIE_FILE=DNE
 
 
 if [ "$1" == "help" ]; then
@@ -59,16 +61,14 @@ else # input is alpha
     else
         PREFIX=$1
         if [ $# == 2 ]; then # second argument exists
-            if [ $2 > 0 ]; then
+            if [ $2 == "m" ]; then # merge all with prefix
+                MERGE=1
+                EDIT=1
+            elif [ $2 > 0 ]; then
                 DATE=`date -d "$DATE - $2 day" +%Y-%m-%d` # prints current date - x days
-                echo $DATE
                 echo $PREFIX
                 EDIT=0
             fi # numeric
-            if [ $2 == "m" ]; then # merge all with prefix
-                MERGE=1
-                EDIT=0
-            fi # merge
         else
             EDIT=1
             if [ $# == 3 ]; then
@@ -96,14 +96,31 @@ fi # check on numeric/alpha argument
 # check for existince of backup / merge dir
 # if exists, then remove date from filename, then proceed.
 if [ -d "$DIR$MERGE_DIR_PRE$PREFIX" ]; then
+    COOKIE_FILE="$DIR$MERGE_DIR_PRE$PREFIX/$PREFIX-$DATE"
     FILE=$DIR$PREFIX
+    MERGE=1
+else
+    if [ $MERGE == 1 ]; then
+       # COOKIE_FILE=$DIR$MERGE_DIR_PRE$PREFIX-$DATE
+        COOKIE_FILE="$DIR$MERGE_DIR_PRE$PREFIX/$PREFIX-$DATE"
+        FILE=$DIR$PREFIX
+        # merge all files with PREFIX
+        TMP_PRE=DO_NOT_MOVE_
+        cat $DIR$PREFIX* > $DIR$TMP_PRE$PREFIX
+        mkdir $DIR$MERGE_DIR_PRE$PREFIX
+        mv $DIR$PREFIX* $DIR$MERGE_DIR_PRE$PREFIX
+        mv $DIR$TMP_PRE$PREFIX $FILE
+    fi
 fi
 
 
 if [ $EDIT == 1 ]; then
-    if [ ! -f $FILE ]; then
-        touch $FILE
-        echo "== $PREFIX notes for $DATE ==" > $FILE 
+
+    if [ $MERGE == 1 ]; then
+        if [ ! -f "$COOKIE_FILE" ]; then
+            touch $COOKIE_FILE
+            echo "== $PREFIX notes for $DATE ==" >> $FILE 
+        fi
     fi
     vim $FILE
     ls $DIR
@@ -122,12 +139,4 @@ else
     fi
 fi
 
-if [ $MERGE == 1 ]; then
-    # merge all files with PREFIX
-    TMP_PRE=DO_NOT_MOVE_
-    cat $DIR$PREFIX* > $DIR$TMP_PRE$PREFIX
-    mkdir $DIR$MERGE_DIR_PRE$PREFIX
-    mv $DIR$PREFIX* $DIR$MERGE_DIR_PRE$PREFIX
-    mv $DIR$TMP_PRE$PREFIX $DIR$PREFIX
-fi
 
