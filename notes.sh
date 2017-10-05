@@ -10,11 +10,14 @@ LIST_DIRS=0
 if [ "$1" == "help" ]; then
     echo Notes program created by Ryan Radjabi
     echo    Usage:
-    echo        "Edit today's notes:        'notes'"
-    echo        "Print today's notes:       'notes p'"
-    echo        "Edit yesterday's notes:    'notes 1 e'"
-    echo        "Print yesterday's notes:   'notes 1'"
-    echo        "List all notes:            'notes ls'"
+    echo        "Edit today's notes:                        'notes'"
+    echo        "Print today's notes:                       'notes p'"
+    echo        "Edit yesterday's notes:                    'notes 1 e'"
+    echo        "Print yesterday's notes:                   'notes 1'"
+    echo        "Edit today's <meeting name> notes:         'notes <meeting name>"
+    echo        "Print today's <meeting name> notes:        'notes <meeting name> p"
+    echo        "Print yesterday's <meeting name> notes:    'notes <meeting name> 1"
+    echo        "List all notes:                            'notes ls'"
     exit
 fi
 
@@ -43,13 +46,23 @@ else # input is alpha
         EDIT=0 
         PREFIX=Daily
     else
-        EDIT=1
         PREFIX=$1
+        if [ $# == 2 ]; then
+            if [ $2 > 0 ]; then
+                DATE=`date -d "$DATE - $2 day" +%Y-%m-%d` # prints current date - x days
+                echo $DATE
+                echo $PREFIX
+            fi # numeric
+            EDIT=0
+        else
+            EDIT=1
+        fi # more than 1 arg
     fi
 
 #    echo prefix: $PREFIX
     FILE=$DIR$PREFIX-$DATE
-
+    echo $FILE
+            
     if [ $1 = "ls" ]; then
         EDIT=0
         LIST_DIRS=1
@@ -71,7 +84,7 @@ else
         echo ~~~~~~~~~~~~~~~~~~
         cat $FILE
     else
-        ls $DIR
+        ls -1 $DIR
     fi
 fi
 
