@@ -5,6 +5,7 @@ DATE=`date +%Y-%m-%d`
 #echo $DATE
 EDIT=1
 LIST_DIRS=0
+ALL=0
 
 
 if [ "$1" == "help" ]; then
@@ -12,10 +13,12 @@ if [ "$1" == "help" ]; then
     echo    Usage:
     echo        "Edit today's notes:                        'notes'"
     echo        "Print today's notes:                       'notes p'"
+    echo        "Print all Daily notes:                     'notes p a'"
     echo        "Edit yesterday's notes:                    'notes 1 e'"
     echo        "Print yesterday's notes:                   'notes 1'"
     echo        "Edit today's <meeting name> notes:         'notes <meeting name>"
     echo        "Print today's <meeting name> notes:        'notes <meeting name> p"
+    echo        "Print all <meeting name> notes:            'notes <meeting name> p a"
     echo        "Print yesterday's <meeting name> notes:    'notes <meeting name> 1"
     echo        "List all notes:                            'notes ls'"
     exit
@@ -45,6 +48,11 @@ else # input is alpha
     if [ $1 == "p" ]; then # p for print
         EDIT=0 
         PREFIX=Daily
+        if [ $# == 2 ]; then
+            if [ $2 == "a" ]; then
+                ALL=1;
+            fi
+        fi
     else
         PREFIX=$1
         if [ $# == 2 ]; then
@@ -56,6 +64,14 @@ else # input is alpha
             EDIT=0
         else
             EDIT=1
+            if [ $# == 3 ]; then
+                if [ $2 == "p" ]; then
+                    EDIT=0;
+                    if [ $3 == "a" ]; then
+                        ALL=1; # example: notes Convergence p a >> print all notes of Convergence type
+                    fi                        
+                fi 
+            fi
         fi # more than 1 arg
     fi
 
@@ -82,7 +98,11 @@ else
         echo 
         echo
         echo ~~~~~~~~~~~~~~~~~~
-        cat $FILE
+        if [ $ALL == 0 ]; then
+            cat -n $FILE
+        else
+            cat -n $DIR$PREFIX*
+        fi
     else
         ls -1 $DIR
     fi
